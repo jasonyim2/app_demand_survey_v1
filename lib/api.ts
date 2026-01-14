@@ -1,7 +1,7 @@
 import { Student, AppRequest } from "./types"
 
 const BASE_URL =
-  "https://script.google.com/macros/s/AKfycby5Bp1T_Vcu3F4K98GMw6GWHrNSRIjau-91_pt9fR5o4cdGxi-lPshMrctc2nf6ZkXs/exec"
+  "https://script.google.com/macros/s/AKfycbw2Bqz12Eh9QWvIRxz5mLvR8dvAoDpLVINzO9fqyxDjwCxVZYxwesqIluJJfzNiWhY4/exec"
 
 // Helper function to pick the first defined value from a list of keys
 function pickFirst(row: Record<string, any>, keys: string[]) {
