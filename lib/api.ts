@@ -33,7 +33,7 @@ export async function fetchParticipants(): Promise<Student[]> {
     const url = new URL(BASE_URL)
     url.searchParams.set("t", String(Date.now())) // Prevent caching
 
-    const res = await fetch(url.toString())
+    const res = await fetch(url.toString(), { cache: "no-store" })
     if (!res.ok) throw new Error(`API error: ${res.status}`)
     const data = await res.json()
 
@@ -66,7 +66,7 @@ export async function fetchRequests(): Promise<AppRequest[]> {
     url.searchParams.set("sheet", "앱수요입력")
     url.searchParams.set("t", String(Date.now()))
 
-    const res = await fetch(url.toString())
+    const res = await fetch(url.toString(), { cache: "no-store" })
     if (!res.ok) throw new Error(`API error: ${res.status}`)
     const data = await res.json()
 
