@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import type { Feedback } from "@/lib/types"
-import { getRequestById } from "@/lib/mock-data"
+// import { getRequestById } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
 interface FeedbackTimelineItemProps {
@@ -24,7 +24,8 @@ const decisionStyles: Record<string, { bg: string; dot: string }> = {
 }
 
 export function FeedbackTimelineItem({ feedback }: FeedbackTimelineItemProps) {
-  const request = getRequestById(feedback.request_id)
+  // const request = getRequestById(feedback.request_id)
+  const request: any = null // Placeholder
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ko-KR", {

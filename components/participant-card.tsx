@@ -2,15 +2,15 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import type { Participant } from "@/lib/types"
 import { ChevronRight, User } from "lucide-react"
-import { getRequestCountByParticipant, getLatestRequestDate } from "@/lib/mock-data"
 
 interface ParticipantCardProps {
   participant: Participant
+  requestCount?: number
+  latestRequestDate?: string
 }
 
-export function ParticipantCard({ participant }: ParticipantCardProps) {
-  const requestCount = getRequestCountByParticipant(participant.student_id)
-  const latestRequest = getLatestRequestDate(participant.student_id)
+export function ParticipantCard({ participant, requestCount = 0, latestRequestDate }: ParticipantCardProps) {
+  const latestRequest = latestRequestDate
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ko-KR", {

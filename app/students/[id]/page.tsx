@@ -2,9 +2,11 @@
 
 import { useRouter, useParams } from "next/navigation"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { IOSTabBar } from "@/components/ios-tab-bar"
 import { CategoryBadge } from "@/components/category-badge"
-import { getStudentById, getRequestsByStudent } from "@/lib/mock-data"
+import { fetchParticipants, fetchRequests } from "@/lib/api"
+import type { Student, AppRequest } from "@/lib/types"
 import { getInitials } from "@/lib/types"
 import { ChevronLeft, ChevronRight, Mail, Phone, Calendar, Code, MessageSquare } from "lucide-react"
 
@@ -13,12 +15,49 @@ export default function StudentDetailPage() {
   const id = params.id as string
   const router = useRouter()
 
-  const student = getStudentById(id)
-  const requests = getRequestsByStudent(id)
+  const [student, setStudent] = useState<Student | null>(null)
+  const [requests, setRequests] = useState<AppRequest[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadData() {
+      setIsLoading(true)
+      try {
+        const [pData, rData] = await Promise.all([
+          fetchParticipants(),
+          fetchRequests()
+        ])
+        const foundStudent = pData.find(s => s.student_id === id)
+        if (foundStudent) {
+          setStudent(foundStudent)
+          const studentRequests = rData.filter(r => r.student_id === id)
+          setRequests(studentRequests)
+        } else {
+          // If not found, we might redirect or just stay null
+          // But let's handle it in render
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadData()
+  }, [id])
+
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>
+  }
 
   if (!student) {
-    router.push("/students")
-    return null
+    // If loading finished and stduent is null
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <p>참가자를 찾을 수 없습니다.</p>
+        <button onClick={() => router.push("/students")} className="text-blue-500 mt-4">돌아가기</button>
+      </div>
+    )
   }
 
   const formatDate = (dateString: string) => {

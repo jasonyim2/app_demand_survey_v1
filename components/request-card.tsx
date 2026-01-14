@@ -4,15 +4,16 @@ import Link from "next/link"
 import type { AppRequest } from "@/lib/types"
 import { CategoryBadge } from "@/components/category-badge"
 import { CategoryIcon } from "@/components/category-icon"
-import { getStudentById } from "@/lib/mock-data"
+// import { getStudentById } from "@/lib/mock-data"
 import { ChevronRight } from "lucide-react"
 
 interface RequestCardProps {
   request: AppRequest
+  studentName?: string
 }
 
-export function RequestCard({ request }: RequestCardProps) {
-  const student = getStudentById(request.student_id)
+export function RequestCard({ request, studentName }: RequestCardProps) {
+  // const student = getStudentById(request.student_id)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ko-KR", {
@@ -37,7 +38,7 @@ export function RequestCard({ request }: RequestCardProps) {
             <p className="mt-2 line-clamp-2 text-[15px] leading-relaxed text-[#3a3a3c]">{request.current_issue}</p>
             <div className="mt-3 flex items-center justify-between">
               <CategoryBadge category={request.admin_category} />
-              {student && <span className="text-[12px] text-[#8e8e93]">{student.name}</span>}
+              {studentName && <span className="text-[12px] text-[#8e8e93]">{studentName}</span>}
             </div>
           </div>
         </div>

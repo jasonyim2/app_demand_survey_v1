@@ -4,9 +4,9 @@ export interface Student {
   name: string
   email: string
   phone: string
-  age_group: "40대" | "50대" | "60대"
+  age_group: string // Changed from strict union to string for API compatibility
   job_status: string
-  it_level: "초급" | "중급" | "고급"
+  it_level: string // Changed from strict union to string for API compatibility
   cohort: string
   memo?: string
   created_at: string
@@ -25,6 +25,9 @@ export interface AppRequest {
   primary_device: string
   feedback_frequency: string
   submitted_at: string
+  requester_name?: string
+  status?: string
+  priority?: string
 }
 
 // 피드백 (Feedback) 타입

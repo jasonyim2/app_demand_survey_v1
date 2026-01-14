@@ -1,0 +1,13 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/feedback/[id]/page": "/feedback/[id]",
+  "/feedback/page": "/feedback",
+  "/page": "/",
+  "/participants/[id]/page": "/participants/[id]",
+  "/participants/page": "/participants",
+  "/requests/[id]/page": "/requests/[id]",
+  "/requests/page": "/requests",
+  "/students/[id]/page": "/students/[id]",
+  "/students/page": "/students"
+}

@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { IOSTabBar } from "@/components/ios-tab-bar"
 import { CategoryIcon } from "@/components/category-icon"
 import { CategoryBadge } from "@/components/category-badge"
@@ -11,15 +11,22 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { getRequestById, getStudentById, getFeedbacksByRequest } from "@/lib/mock-data"
+import { fetchRequests, fetchParticipants } from "@/lib/api"
 import { getInitials } from "@/lib/types"
-import type { Feedback } from "@/lib/types"
+import type { Feedback, AppRequest, Student } from "@/lib/types"
 import { ChevronLeft, Smartphone, Clock, AlertCircle, Lightbulb, Zap, ChevronRight, Plus, X, Send } from "lucide-react"
 
 export default function RequestDetailPage() {
   const params = useParams()
   const id = params.id as string
   const router = useRouter()
+
+  const [request, setRequest] = useState<AppRequest | null>(null)
+  const [student, setStudent] = useState<Student | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // API doesn't support feedbacks yet
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
 
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
   const [feedbackForm, setFeedbackForm] = useState({
@@ -31,15 +38,43 @@ export default function RequestDetailPage() {
     email_replied: false,
   })
 
-  const request = getRequestById(id)
+  useEffect(() => {
+    async function loadData() {
+      setIsLoading(true)
+      try {
+        const [rData, pData] = await Promise.all([
+          fetchRequests(),
+          fetchParticipants()
+        ])
+        const foundRequest = rData.find(r => r.request_id === id)
+        if (foundRequest) {
+          setRequest(foundRequest)
+          if (foundRequest.student_id) {
+            const foundStudent = pData.find(s => s.student_id === foundRequest.student_id)
+            setStudent(foundStudent || null)
+          }
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadData()
+  }, [id])
 
-  if (!request) {
-    router.push("/")
-    return null
+  if (isLoading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>
   }
 
-  const student = getStudentById(request.student_id)
-  const feedbacks = getFeedbacksByRequest(id)
+  if (!request) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <p>요청을 찾을 수 없습니다.</p>
+        <button onClick={() => router.push("/requests")} className="text-blue-500 mt-4">목록으로</button>
+      </div>
+    )
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ko-KR", {
@@ -66,7 +101,10 @@ export default function RequestDetailPage() {
       email_replied: feedbackForm.email_replied,
     }
 
-    console.log("Feedback submitted:", newFeedback)
+    console.log("Feedback submitted (Local only):", newFeedback)
+    // Add to local state for demo purposes
+    setFeedbacks(prev => [newFeedback, ...prev])
+
     setShowFeedbackForm(false)
     setFeedbackForm({
       feedback_type: "답변",
@@ -257,9 +295,8 @@ export default function RequestDetailPage() {
                     <button
                       key={type}
                       onClick={() => setFeedbackForm({ ...feedbackForm, feedback_type: type })}
-                      className={`rounded-full px-4 py-2 text-[14px] font-medium transition-all active:scale-95 ${
-                        feedbackForm.feedback_type === type ? "bg-[#007aff] text-white" : "bg-[#f2f2f7] text-[#3a3a3c]"
-                      }`}
+                      className={`rounded-full px-4 py-2 text-[14px] font-medium transition-all active:scale-95 ${feedbackForm.feedback_type === type ? "bg-[#007aff] text-white" : "bg-[#f2f2f7] text-[#3a3a3c]"
+                        }`}
                     >
                       {type}
                     </button>
@@ -298,8 +335,7 @@ export default function RequestDetailPage() {
                     <button
                       key={decision || "none"}
                       onClick={() => setFeedbackForm({ ...feedbackForm, decision })}
-                      className={`rounded-full px-4 py-2 text-[14px] font-medium transition-all active:scale-95 ${
-                        feedbackForm.decision === decision
+                      className={`rounded-full px-4 py-2 text-[14px] font-medium transition-all active:scale-95 ${feedbackForm.decision === decision
                           ? decision === "확정"
                             ? "bg-[#34c759] text-white"
                             : decision === "보류"
@@ -308,7 +344,7 @@ export default function RequestDetailPage() {
                                 ? "bg-[#ff3b30] text-white"
                                 : "bg-[#007aff] text-white"
                           : "bg-[#f2f2f7] text-[#3a3a3c]"
-                      }`}
+                        }`}
                     >
                       {decision || "미정"}
                     </button>

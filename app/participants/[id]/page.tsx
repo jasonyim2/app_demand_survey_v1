@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/bottom-nav"
 import { PageHeader } from "@/components/page-header"
 import { RequestCard } from "@/components/request-card"
 import { Card } from "@/components/ui/card"
-import { getParticipantById, getRequestsByParticipant, getRequestCountByParticipant } from "@/lib/mock-data"
+import { fetchParticipants, fetchRequests } from "@/lib/api"
 import { User, Mail, Phone, Briefcase, Monitor, StickyNote } from "lucide-react"
 
 interface Props {
@@ -12,14 +12,24 @@ interface Props {
 
 export default async function ParticipantDetailPage({ params }: Props) {
   const { id } = await params
-  const participant = getParticipantById(id)
+
+  // Since our API currently fetches all data, we fetch all and filter.
+  // Ideally, API would support filtering by ID.
+  const [participants, allRequests] = await Promise.all([
+    fetchParticipants(),
+    fetchRequests()
+  ])
+
+  const participant = participants.find(p => p.student_id === id)
 
   if (!participant) {
     notFound()
   }
 
-  const requests = getRequestsByParticipant(id)
-  const requestCount = getRequestCountByParticipant(id)
+  const requests = allRequests.filter(r => r.student_id === id)
+    .sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())
+
+  const requestCount = requests.length
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -76,7 +86,7 @@ export default async function ParticipantDetailPage({ params }: Props) {
           <h3 className="text-xs font-medium text-muted-foreground">이 참가자의 앱수요입력 ({requests.length}건)</h3>
           <div className="space-y-2">
             {requests.length > 0 ? (
-              requests.map((request) => <RequestCard key={request.request_id} request={request} />)
+              requests.map((request) => <RequestCard key={request.request_id} request={request} studentName={participant.name} />)
             ) : (
               <Card className="py-8">
                 <p className="text-center text-sm text-muted-foreground">등록된 앱수요입력이 없습니다.</p>

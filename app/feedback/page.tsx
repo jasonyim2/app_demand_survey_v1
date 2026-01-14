@@ -3,12 +3,12 @@
 import { useMemo } from "react"
 import { IOSTabBar } from "@/components/ios-tab-bar"
 import { FeedbackTimelineItem } from "@/components/feedback-timeline-item"
-import { feedbacks } from "@/lib/mock-data"
+// import { feedbacks } from "@/lib/mock-data"
 
 export default function FeedbackPage() {
-  const sortedFeedbacks = useMemo(() => {
-    return [...feedbacks].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  }, [])
+  // Since we don't have API for feedbacks, we show empty state or local mock. 
+  // User requested to replace mock data. So we show empty state.
+  const sortedFeedbacks: any[] = []
 
   return (
     <div className="min-h-screen bg-background pb-24">
