@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { BottomNav } from "@/components/bottom-nav"
 import { PageHeader } from "@/components/page-header"
 import { FilterChips } from "@/components/filter-chips"
 import { RequestCard } from "@/components/request-card"
-import { fetchRequests } from "@/lib/api"
-import type { AppRequest } from "@/lib/types"
+import { RequestCardSkeleton } from "@/components/skeletons/request-card-skeleton"
+import { useRequests } from "@/lib/hooks"
 
 const statusOptions = [
   { value: "접수", label: "접수" },
@@ -32,23 +32,7 @@ export default function RequestsPage() {
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null)
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
 
-  const [requests, setRequests] = useState<AppRequest[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    async function loadData() {
-      setIsLoading(true)
-      try {
-        const data = await fetchRequests()
-        setRequests(data)
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    loadData()
-  }, [])
+  const { requests, isLoading } = useRequests()
 
   const filteredRequests = useMemo(() => {
     let filtered = [...requests].sort(
@@ -62,19 +46,6 @@ export default function RequestsPage() {
       filtered = filtered.filter((r) => r.priority === priorityFilter)
     }
     if (categoryFilter) {
-      // API response uses mapped keys but we should check which field corresponds to category.
-      // In types.ts/api.ts we have surveyor_category and admin_category.
-      // The mock data used just 'category' but types.ts doesn't have it?
-      // Wait, let's check types.ts again. AppRequest has surveyor_category and admin_category.
-      // But the original code had `r.category`.
-      // The original `mapRowToRequest` in `app/page.tsx` didn't have `category`.
-      // The original `lib/types.ts` has `surveyor_category`.
-      // The original `lib/mock-data.ts` had... let's check Step 58.
-      // Mock data had `surveyor_category` and `admin_category`.
-      // But `app/requests/page.tsx` line 46 used `r.category`.
-      // This implies `AppRequest` type in global/mock was different or I missed something.
-      // Or `category` was an optional field?
-      // Let's assume surveyor_category is the one to use for now.
       filtered = filtered.filter((r) => r.surveyor_category === categoryFilter || r.admin_category === categoryFilter)
     }
 
@@ -101,13 +72,16 @@ export default function RequestsPage() {
         </div>
 
         <div className="flex justify-between items-center text-xs text-muted-foreground">
-          <p>총 {filteredRequests.length}건</p>
-          {isLoading && <p>로딩 중...</p>}
+          <p>총 {isLoading ? "..." : filteredRequests.length}건</p>
+          {isLoading && <p>업데이트 중...</p>}
         </div>
 
         <div className="space-y-2">
           {isLoading && requests.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">데이터를 불러오는 중입니다...</div>
+            // Skeleton Loading State
+            Array.from({ length: 5 }).map((_, i) => (
+              <RequestCardSkeleton key={i} />
+            ))
           ) : filteredRequests.length > 0 ? (
             filteredRequests.map((request) => <RequestCard key={request.request_id} request={request} studentName={request.requester_name} />)
           ) : (
@@ -120,3 +94,4 @@ export default function RequestsPage() {
     </div>
   )
 }
+

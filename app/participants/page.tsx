@@ -1,39 +1,21 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { BottomNav } from "@/components/bottom-nav"
 import { PageHeader } from "@/components/page-header"
 import { SearchInput } from "@/components/search-input"
 import { ParticipantCard } from "@/components/participant-card"
-import { fetchParticipants, fetchRequests } from "@/lib/api"
-import type { Student, AppRequest } from "@/lib/types"
+import { ParticipantCardSkeleton } from "@/components/skeletons/participant-card-skeleton"
+import { useParticipants, useRequests } from "@/lib/hooks"
 
 export default function ParticipantsPage() {
   const [search, setSearch] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const [participants, setParticipants] = useState<Student[]>([])
-  const [requests, setRequests] = useState<AppRequest[]>([])
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function loadData() {
-      setIsLoading(true)
-      try {
-        const [pData, rData] = await Promise.all([
-          fetchParticipants(),
-          fetchRequests()
-        ])
-        setParticipants(pData)
-        setRequests(rData)
-      } catch (err) {
-        console.error(err)
-        setErrorMsg("데이터를 불러오는 중 오류가 발생했습니다.")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    loadData()
-  }, [])
+  const { students: participants, isLoading: participantsLoading, isError: participantsError } = useParticipants()
+  const { requests, isLoading: requestsLoading } = useRequests()
+
+  const isLoading = participantsLoading || requestsLoading
+  const errorMsg = participantsError ? "데이터를 불러오는 중 오류가 발생했습니다." : null
 
   const filteredParticipants = useMemo(() => {
     if (!search.trim()) return participants
@@ -68,7 +50,7 @@ export default function ParticipantsPage() {
         <SearchInput value={search} onChange={setSearch} placeholder="이름, 이메일, 전화번호 검색..." />
 
         <div className="flex justify-between items-center text-xs text-muted-foreground">
-          <p>총 {filteredParticipants.length}명</p>
+          <p>총 {isLoading ? "..." : filteredParticipants.length}명</p>
           {isLoading && <p>업데이트 중...</p>}
         </div>
 
@@ -78,7 +60,10 @@ export default function ParticipantsPage() {
 
         <div className="space-y-2">
           {isLoading && participants.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">데이터를 불러오는 중입니다...</div>
+            // Skeleton Loading State
+            Array.from({ length: 5 }).map((_, i) => (
+              <ParticipantCardSkeleton key={i} />
+            ))
           ) : filteredParticipants.length > 0 ? (
             filteredParticipants.map((participant) => {
               const { count, latest } = getStudentMeta(participant.student_id)

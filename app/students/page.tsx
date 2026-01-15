@@ -1,31 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { IOSTabBar } from "@/components/ios-tab-bar"
 import { StudentListItem } from "@/components/student-list-item"
-import { fetchParticipants } from "@/lib/api"
+import { StudentListItemSkeleton } from "@/components/skeletons/student-list-item-skeleton"
+import { useParticipants } from "@/lib/hooks"
 import type { Student } from "@/lib/types"
 import { Search } from "lucide-react"
 
 export default function StudentsPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [students, setStudents] = useState<Student[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    async function loadData() {
-      setIsLoading(true)
-      try {
-        const data = await fetchParticipants()
-        setStudents(data)
-      } catch (err) {
-        console.error("Failed to load students", err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    loadData()
-  }, [])
+  const { students, isLoading } = useParticipants()
 
   const filteredStudents = students.filter(
     (student) =>
@@ -55,7 +41,7 @@ export default function StudentsPage() {
       <header className="sticky top-0 z-40 glass-effect border-b border-[#e5e5ea]/50 px-4 pb-3 pt-14">
         <h1 className="text-[34px] font-bold tracking-tight text-[#1c1c1e]">Students</h1>
         <div className="flex justify-between items-center mt-1">
-          <p className="text-[15px] text-[#8e8e93]">{students.length}명의 설문 참가자</p>
+          <p className="text-[15px] text-[#8e8e93]">{isLoading ? "..." : students.length}명의 설문 참가자</p>
           {isLoading && <p className="text-xs text-blue-500">로딩 중...</p>}
         </div>
 
@@ -75,7 +61,14 @@ export default function StudentsPage() {
       {/* Inset Grouped List */}
       <main className="p-4">
         {isLoading && students.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">데이터를 불러오는 중입니다...</div>
+          // Skeleton Loading State
+          <div className="overflow-hidden rounded-xl bg-card shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className={i !== 5 ? "border-b border-[#e5e5ea]" : ""}>
+                <StudentListItemSkeleton />
+              </div>
+            ))}
+          </div>
         ) : sortedCohorts.map((cohort) => (
           <section key={cohort} className="mb-6">
             <p className="mb-2 px-4 text-[13px] font-semibold uppercase tracking-wider text-[#8e8e93]">{cohort}</p>
